@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rina's Tax Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+  --bg: #F7F3FF;
+  --surface: #FFFFFF;
+  --surface2: #F1EBFF;
+
+  --accent: #7C5CFF;
+  --accent-light: #EAE4FF;
+  --accent-dark: #5A3FE0;
+
+  --text: #1A1625;
+  --text-muted: #6E6485;
+  --text-faint: #B3A9CC;
+
+  --border: rgba(26,22,37,0.08);
+  --border-strong: rgba(26,22,37,0.16);
+
+  --green: #4CAF93;
+  --green-light: #E3F5F0;
+
+  --red: #D05A6E;
+  --red-light: #F8E4E8;
+
+  --radius: 16px;
+  --radius-sm: 8px;
+
+  body.dark {
+  --bg: #0F0D14;
+  --surface: #171423;
+  --surface2: #1F1A2E;
+
+  --text: #F5F3FF;
+  --text-muted: #B7AFCF;
+  --text-faint: #7E7396;
+
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+
+  --accent-light: rgba(124,92,255,0.18);
+}
+}
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* Background decoration */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px; right: -120px;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,92,255,0.18) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -80px; left: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(180,150,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .flag-emoji {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 0.75rem;
+      letter-spacing: 4px;
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    header h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    header p {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .card:nth-child(2) { animation-delay: 0.05s; }
+    .card:nth-child(3) { animation-delay: 0.10s; }
+    .card:nth-child(4) { animation-delay: 0.15s; }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Input */
+    .input-group {
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap .symbol {
+      position: absolute;
+      left: 14px;
+      font-size: 20px;
+      font-family: 'DM Serif Display', serif;
+      color: var(--text-muted);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .input-wrap input[type="number"] {
+      width: 100%;
+      padding: 14px 14px 14px 32px;
+      font-size: 26px;
+      font-family: 'DM Serif Display', serif;
+      font-weight: 400;
+      color: var(--text);
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    .input-wrap input[type="number"]::-webkit-inner-spin-button,
+    .input-wrap input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .input-wrap input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,105,58,0.12);
+      background: var(--surface);
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 14px;
+      font-size: 13px;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.25rem 1rem;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .summary-card:nth-child(1) { animation-delay: 0.08s; }
+    .summary-card:nth-child(2) { animation-delay: 0.12s; }
+    .summary-card:nth-child(3) { animation-delay: 0.16s; grid-column: 1 / -1; }
+
+    .summary-card.highlight {
+      background: var(--accent);
+      border-color: var(--accent-dark);
+    }
+
+    .summary-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 6px;
+    }
+
+    .summary-card.highlight .summary-label {
+      color: rgba(255,255,255,0.65);
+    }
+
+    .summary-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .summary-card.highlight .summary-value {
+      color: #fff;
+    }
+
+    .summary-card.green-card .summary-value { color: var(--green); }
+    .summary-card.red-card .summary-value { color: var(--red); }
+
+    .summary-sub {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 4px;
+    }
+
+    .summary-card.highlight .summary-sub {
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* Breakdown */
+    .breakdown-list {
+      list-style: none;
+    }
+
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 14px;
+      gap: 12px;
+    }
+
+    .breakdown-item:last-child { border-bottom: none; }
+
+    .breakdown-item .item-label {
+      color: var(--text-muted);
+      font-weight: 300;
+      flex: 1;
+    }
+
+    .breakdown-item .item-val {
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .breakdown-item .item-val.neg { color: var(--red); }
+    .breakdown-item .item-val.pos { color: var(--green); }
+    .breakdown-item .item-val.neutral { color: var(--text); }
+
+    .breakdown-item.total {
+      border-top: 0.5px solid var(--border-strong);
+      border-bottom: none;
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+
+    .breakdown-item.total .item-label {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .breakdown-item.total .item-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--green);
+    }
+
+    /* Tax badge */
+    .rate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-light);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-dark);
+      margin-top: 1rem;
+    }
+
+    /* Annual toggle */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 1.25rem;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {  width: 0; height: 0; position: absolute; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border: 0.5px solid var(--border-strong);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track {
+      background: var(--accent);
+      border-color: var(--accent-dark);
+    }
+
+    .toggle input:checked + .toggle-track::after {
+      transform: translateX(18px);
+      background: #fff;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 2rem;
+      line-height: 1.8;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from {  transform: translateY(-16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from {  transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Number pulse on change */
+    .pulse {
+      animation: numPulse 0.3s ease;
+    }
+
+    @keyframes numPulse {
+      0% { opacity: 0.4; transform: scale(0.97); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      header h1 { font-size: 2rem; }
+      .card { padding: 1.25rem; }
+      .summary-value { font-size: 1.7rem; }
+    }
+  .love-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: -1.5rem;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.signature {
+  display: flex;
+  justify-content: center;
+  margin: 0px 0 40px;
+
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.signature img {
+  height: 120px;   /* control size here */
+  width: auto;
+  display: block;
+}
+
+.signature.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+
+.corner-heart {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+
+.summary-card.highlight {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  border: none;
+  box-shadow: 0 10px 30px rgba(124,92,255,0.25);
+}
+
+#splash {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #7C5CFF, #5A3FE0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+/* typing text */
+.splash-text {
+  color: white;
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 3px solid rgba(255,255,255,0.8);
+  width: 0;
+  max-width: 215px;
+
+  animation: typing 4s steps(70, end) forwards;
+}
+
+/* typing animation */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+/* slide up animation */
+#splash.hide {
+  animation: slideUp 1s ease forwards;
+}
+
+@keyframes slideUp {
+  to {
+    transform: translateY(-100%);
+  }
+}
+.theme-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 9999;
+  transition: all 0.3s ease;
+}
+
+.theme-btn:hover {
+  transform: scale(1.05);
+}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="splash-text">Hi Dumbass</div>
+</div>
+
+
+<div class="container">
+  <span class="corner-heart">💜</span>
+
+  <header>
+    <button id="theme-toggle" class="theme-btn">🌙</button>
+    <h1>Little Rina’s<br><em>Taxes</em></h1>
+    <p>now you can spend more time doing things you actually enjoy cause you are just a girl so wtf do you know about taxes</p>
+  </header>
+  <p class="love-note">always with you, adma.</p>
+
+  <!-- Input -->
+  <div class="card">
+    <p class="card-title">Monthly income</p>
+    <div class="input-group">
+      <label for="income">put your pay before tax here</label>
+      <div class="input-wrap">
+        <span class="symbol">£</span>
+        <input type="number" id="income" min="0" step="1" value="42069" />
+        <span class="input-suffix">/ month</span>
+      </div>
+    </div>
+    <div class="toggle-wrap">
+      <label class="toggle">
+        <input type="checkbox" id="annual-toggle" />
+        <span class="toggle-track"></span>
+      </label>
+      <span id="toggle-label">Show annual figures</span>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card highlight">
+      <p class="summary-label">Take-home</p>
+      <p class="summary-value" id="s-takehome">—</p>
+      <p class="summary-sub" id="s-period">per month</p>
+    </div>
+    <div class="summary-card red-card">
+      <p class="summary-label">Deductions</p>
+      <p class="summary-value" id="s-deduct">—</p>
+      <p class="summary-sub" id="s-period2">per month</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">Effective tax rate</p>
+      <p class="summary-value" id="s-rate">—</p>
+      <p class="summary-sub">of gross income</p>
+    </div>
+  </div>
+   
+  <!-- Breakdown -->
+  <div class="card">
+    <p class="card-title">Full breakdown</p>
+    <ul class="breakdown-list">
+      <li class="breakdown-item">
+        <span class="item-label">Gross income</span>
+        <span class="item-val neutral" id="b-gross">—</span>
+      </li>
+      <li class="breakdown-item">
+        <span class="item-label">Personal allowance (tax-free)</span>
+        <span class="item-val neutral" id="b-pa">—</span>
+      </li>
+      <li class="breakdown-item">
+        <span class="item-label">Taxable income</span>
+        <span class="item-val neutral" id="b-taxable">—</span>
+      </li>
+      <li class="breakdown-item">
+        <span class="item-label">Income tax (20%)</span>
+        <span class="item-val neg" id="b-it">—</span>
+      </li>
+      <li class="breakdown-item">
+        <span class="item-label">National Insurance (8%)</span>
+        <span class="item-val neg" id="b-ni">—</span>
+      </li>
+      <li class="breakdown-item total">
+        <span class="item-label">Net pay</span>
+        <span class="item-val pos" id="b-net">—</span>
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    Based on HMRC 2024/25 rates · Personal allowance £12,570/yr<br>
+    NI threshold £1,048/month · Basic rate 20% · NI rate 8%<br><br>
+    
+  </footer>
+  <div class="signature">
+  <img src="signature.png" alt="signature">
+  </div>
+</div>
+
+<script>
+  const PA_MONTHLY = 12570 / 12;
+  const BASIC_RATE = 0.20;
+  const NI_THRESHOLD = 1048;
+  const NI_UPPER = 50270 / 12;
+  const NI_RATE = 0.08;
+
+  let showAnnual = false;
+
+  const fmt = (n) => {
+    const rounded = Math.round(n * 100) / 100;
+    return '£' + rounded.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const pulse = (el) => {
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+  };
+
+  const ids = ['s-takehome','s-deduct','s-rate','b-gross','b-pa','b-taxable','b-it','b-ni','b-net'];
+
+  function calc() {
+    const monthly = parseFloat(document.getElementById('income').value) || 0;
+    const mult = showAnnual ? 12 : 1;
+
+    const paUsed = Math.min(monthly, PA_MONTHLY);
+    const taxable = Math.max(0, monthly - PA_MONTHLY);
+    const incomeTax = taxable * BASIC_RATE;
+
+    const niable = Math.max(0, Math.min(monthly, NI_UPPER) - NI_THRESHOLD);
+    const ni = niable * NI_RATE;
+
+    const totalDeduct = incomeTax + ni;
+    const net = monthly - totalDeduct;
+    const effRate = monthly > 0 ? (totalDeduct / monthly * 100) : 0;
+
+    const period = showAnnual ? 'per year' : 'per month';
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      el.textContent = val;
+      pulse(el);
+    };
+
+    set('s-takehome', fmt(net * mult));
+    set('s-deduct', fmt(totalDeduct * mult));
+    set('s-rate', effRate.toFixed(1) + '%');
+    set('b-gross', fmt(monthly * mult));
+    set('b-pa', fmt(paUsed * mult));
+    set('b-taxable', fmt(taxable * mult));
+    set('b-it', incomeTax > 0 ? '−' + fmt(incomeTax * mult) : fmt(0));
+    set('b-ni', ni > 0 ? '−' + fmt(ni * mult) : fmt(0));
+    set('b-net', fmt(net * mult));
+
+    document.getElementById('s-period').textContent = period;
+    document.getElementById('s-period2').textContent = period;
+  }
+
+  document.getElementById('income').addEventListener('input', calc);
+
+  document.getElementById('annual-toggle').addEventListener('change', function() {
+    showAnnual = this.checked;
+    document.getElementById('toggle-label').textContent = showAnnual ? 'Showing annual figures' : 'Show annual figures';
+    calc();
+  });
+
+  calc();
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+  }, 1500);
+});
+
+const toggleBtn = document.getElementById('theme-toggle');
+
+// load saved theme
+document.body.classList.add('dark');
+toggleBtn.textContent = '☀️';
+
+toggleBtn.addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+
+  const isDark = document.body.classList.contains('dark');
+
+  toggleBtn.textContent = isDark ? '☀️' : '🌙';
+
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const signature = document.querySelector('.signature');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        signature.classList.add('show');
+        observer.disconnect(); // triggers only once
+      }
+    });
+  }, {
+    threshold: 0.2
+  });
+
+  observer.observe(signature);
+});
+
+</script>
+
+
+</body>
+</html>
